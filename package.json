@@ -1,0 +1,14 @@
+{
+  "name": "apex-cut-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Apex Cut mobile video editor",
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.0",
+    "@capacitor/share": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0"
+  }
+}

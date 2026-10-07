@@ -1,0 +1,9 @@
+{
+  "appId": "com.apexcut.mobile",
+  "appName": "Apex Cut",
+  "webDir": "www",
+  "backgroundColor": "#0a0d14",
+  "android": {
+    "allowMixedContent": false
+  }
+}
