@@ -1,0 +1,75 @@
+name: Build Apex Pro APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install packages
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Copy app icons
+        run: cp -r resources/android/res/* android/app/src/main/res/
+
+      - name: Lock portrait orientation
+        run: |
+          sed -i '0,/android:exported="true"/s//android:exported="true"\n            android:screenOrientation="portrait"/' android/app/src/main/AndroidManifest.xml
+
+      - name: Add Gallery save plugin (exports go to Movies/Apex Cut)
+        run: |
+          cp native/GallerySaverPlugin.java android/app/src/main/java/com/apexcut/mobile/GallerySaverPlugin.java
+          cp native/MainActivity.java android/app/src/main/java/com/apexcut/mobile/MainActivity.java
+          cp native/IconSwitcherPlugin.java android/app/src/main/java/com/apexcut/mobile/IconSwitcherPlugin.java
+          sed -i 's#<application#<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />\n    <application#' android/app/src/main/AndroidManifest.xml
+
+      - name: Two switchable app icons (Settings > App icon)
+        run: python3 native/add_icon_aliases.py android/app/src/main/AndroidManifest.xml
+
+      - name: Sync web files
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk ApexCut.apk
+
+      - name: Upload APK (Actions artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ApexPro-apk
+          path: ApexPro.apk
+
+      - name: Publish APK to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Apex Pro build ${{ github.run_number }}
+          files: ApexPro.apk
